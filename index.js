@@ -28,14 +28,23 @@ async function run() {
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
 
-// design school api start ------------------------------
+    // design school api start ------------------------------
 
+    app.post("/user", async (req, res) => {
+      const userData = req.body;
+      try {
+        const result = await userCollection.insertOne(userData);
+        res.status(200).json({
+          error: false,
+          data: result,
+          message: "user create successfull",
+        });
+      } catch (error) {
+        res.status(500).json({ error: true, message: error.message });
+      }
+    });
 
-
-// design school api end ------------------------------
-
-
-
+    // design school api end ------------------------------
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
