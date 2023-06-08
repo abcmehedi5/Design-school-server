@@ -173,6 +173,15 @@ async function run() {
       }
     });
 
+    // all instractor
+    app.get("/allInstractor", async (req, res) => {
+      const query = {
+        status: "instractor",
+      };
+      const result = await userCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // add class api .......
     app.post("/addClass", async (req, res) => {
       const data = req.body;
@@ -199,8 +208,9 @@ async function run() {
         const result = await classCollection.find(filter).toArray();
         console.log(result);
         res.send(result);
-      } catch (error) {}
-      console.log(email);
+      } catch (error) {
+        console.log(error);
+      }
     });
 
     // manage classes
@@ -225,7 +235,6 @@ async function run() {
         console.log(error);
       }
     });
-
     // update status classes
 
     app.put("/classes/:id", async (req, res) => {
