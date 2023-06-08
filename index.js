@@ -212,6 +212,42 @@ async function run() {
       }
     });
 
+
+    // update status classes
+
+    app.put("/classes/:id", async (req, res) => {
+      const data = req.body.data;
+      const id = req.params.id;
+      console.log(id, data);
+      try {
+        const filter = {
+          _id: new ObjectId(id),
+        };
+        const options = { upsert: true };
+
+        const updateDoc = {
+          $set: {
+            status: data,
+          },
+        };
+
+        const result = await classCollection.updateOne(
+          filter,
+          updateDoc,
+          options
+        );
+
+        res
+          .status(200)
+          .json({ data: result, message: "status update successfull" });
+      } catch (error) {
+        res.status(500).json({ error: true, message: error.message });
+      }
+    });
+
+
+
+
     // design school api end ------------------------------
 
     console.log(
