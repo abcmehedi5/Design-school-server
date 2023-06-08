@@ -3,6 +3,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 // middleware
 app.use(cors());
@@ -17,8 +18,6 @@ const verifyJWT = (req, res, next) => {
   }
 
   const token = authorization.split(" ")[1];
-  console.log(token);
-
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       return res
@@ -30,7 +29,6 @@ const verifyJWT = (req, res, next) => {
   });
 };
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
 const uri = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASS}@cluster0.13ytubh.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -59,8 +57,9 @@ async function run() {
       res.send({ token });
     });
 
-    app.post("/user", async (req, res) => {
+    app.post("/users", async (req, res) => {
       const userData = req.body;
+      console.log(userData);
       try {
         const result = await userCollection.insertOne(userData);
         res.status(200).json({
@@ -68,6 +67,51 @@ async function run() {
           data: result,
           message: "user create successfull",
         });
+      } catch (error) {
+        res.status(500).json({ error: true, message: error.message });
+      }
+    });
+
+    //  all users
+
+    app.get("/users", verifyJWT, async (req, res) => {
+      const userData = req.body;
+      console.log(userData);
+      try {
+        const result = await userCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).json({ error: true, message: error.message });
+      }
+    });
+
+    // user roll update
+
+    app.put("/users/:id", async (req, res) => {
+      const data = req.body.data;
+      const id = req.params.id;
+      console.log(id, data);
+      try {
+        const filter = {
+          _id: new ObjectId(id),
+        };
+        const options = { upsert: true };
+
+        const updateDoc = {
+          $set: {
+            status: data,
+          },
+        };
+
+        const result = await userCollection.updateOne(
+          filter,
+          updateDoc,
+          options
+        );
+
+        res
+          .status(200)
+          .json({ data: result, message: "role update successfull" });
       } catch (error) {
         res.status(500).json({ error: true, message: error.message });
       }
