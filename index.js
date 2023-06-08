@@ -65,6 +65,19 @@ async function run() {
       }
       next();
     };
+    //verify instractor  middleware
+
+    const verifyInstractor = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      if (user.status !== "instractor") {
+        return res
+          .status(403)
+          .send({ error: true, message: "forbidden message" });
+      }
+      next();
+    };
 
     // design school api start ------------------------------
 
@@ -102,6 +115,30 @@ async function run() {
       }
     });
 
+    // check admin
+    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (req.decoded.email !== email) {
+        res.send({ admin: false });
+      }
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const result = { admin: user?.status == "admin" };
+      res.send(result);
+    });
+
+    // check instractor
+    app.get("/users/instractor/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (req.decoded.email !== email) {
+        res.send({ instractor: false });
+      }
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const result = { instractor: user?.status == "instractor" };
+      res.send(result);
+    });
+
     // user roll update user, admin , instractor
 
     app.put("/users/:id", async (req, res) => {
@@ -132,19 +169,6 @@ async function run() {
       } catch (error) {
         res.status(500).json({ error: true, message: error.message });
       }
-    });
-
-    // check admin
-    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
-      const email = req.params.email;
-      if (req.decoded.email == email) {
-        res.send({ admin: false });
-      }
-      const query = { email: email };
-      const user = await userCollection.findOne(query);
-      const result = { admin: user?.status === "admin" };
-      console.log(result);
-      res.send(result);
     });
 
     // design school api end ------------------------------
