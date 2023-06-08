@@ -9,6 +9,8 @@ require("dotenv").config();
 app.use(cors());
 app.use(express.json());
 
+// varify jwt start -----------------------------
+
 const verifyJWT = (req, res, next) => {
   const authorization = req.headers.authorization;
   if (!authorization) {
@@ -28,6 +30,7 @@ const verifyJWT = (req, res, next) => {
     next();
   });
 };
+// varify jwt start -----------------------------
 
 const uri = `mongodb+srv://${process.env.MONGODB_USER}:${process.env.MONGODB_PASS}@cluster0.13ytubh.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -48,6 +51,20 @@ async function run() {
     await client.db("admin").command({ ping: 1 });
     const db = client.db("design-school");
     const userCollection = db.collection("users");
+
+    //verify admin  middleware
+
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      if (user.status !== "admin") {
+        return res
+          .status(403)
+          .send({ error: true, message: "forbidden message" });
+      }
+      next();
+    };
 
     // design school api start ------------------------------
 
@@ -85,7 +102,7 @@ async function run() {
       }
     });
 
-    // user roll update
+    // user roll update user, admin , instractor
 
     app.put("/users/:id", async (req, res) => {
       const data = req.body.data;
@@ -115,6 +132,19 @@ async function run() {
       } catch (error) {
         res.status(500).json({ error: true, message: error.message });
       }
+    });
+
+    // check admin
+    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      if (req.decoded.email == email) {
+        res.send({ admin: false });
+      }
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const result = { admin: user?.status === "admin" };
+      console.log(result);
+      res.send(result);
     });
 
     // design school api end ------------------------------
