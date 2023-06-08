@@ -52,6 +52,7 @@ async function run() {
     const db = client.db("design-school");
     const userCollection = db.collection("users");
     const classCollection = db.collection("classes");
+    const cartsCollection = db.collection("carts");
 
     //verify admin  middleware
 
@@ -212,6 +213,18 @@ async function run() {
       }
     });
 
+    // only approved classes
+    app.get("/approvedClasses", async (req, res) => {
+      try {
+        const filter = {
+          status: "approved",
+        };
+        const result = await classCollection.find(filter).toArray();
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
+    });
 
     // update status classes
 
@@ -245,8 +258,22 @@ async function run() {
       }
     });
 
+    // carts api
 
+    app.get("/carts", async (req, res) => {
+      const email = req.query.email;
+      const filter = {
+        email: email,
+      };
+      const result = await cartsCollection.find(filter).toArray();
+      res.send(result);
+    });
 
+    app.post("/carts", async (req, res) => {
+      const data = req.body;
+      const result = await cartsCollection.insertOne(data);
+      res.status(200).json({ data: result, message: "selected successfull" });
+    });
 
     // design school api end ------------------------------
 
