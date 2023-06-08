@@ -187,6 +187,31 @@ async function run() {
       }
     });
 
+    // my classes api
+    app.get("/classes", verifyJWT, async (req, res) => {
+      const email = req.query.email;
+      const filter = {
+        instructorEmail: email,
+      };
+
+      try {
+        const result = await classCollection.find(filter).toArray();
+        console.log(result);
+        res.send(result);
+      } catch (error) {}
+      console.log(email);
+    });
+
+    // manage classes
+    app.get("/allClasses", verifyJWT, verifyAdmin, async (req, res) => {
+      try {
+        const result = await classCollection.find().toArray();
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
     // design school api end ------------------------------
 
     console.log(
