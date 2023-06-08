@@ -51,6 +51,7 @@ async function run() {
     await client.db("admin").command({ ping: 1 });
     const db = client.db("design-school");
     const userCollection = db.collection("users");
+    const classCollection = db.collection("classes");
 
     //verify admin  middleware
 
@@ -104,7 +105,7 @@ async function run() {
 
     //  all users
 
-    app.get("/users", verifyJWT, async (req, res) => {
+    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const userData = req.body;
       console.log(userData);
       try {
@@ -168,6 +169,21 @@ async function run() {
           .json({ data: result, message: "role update successfull" });
       } catch (error) {
         res.status(500).json({ error: true, message: error.message });
+      }
+    });
+
+    // add class api .......
+    app.post("/addClass", async (req, res) => {
+      const data = req.body;
+      try {
+        const result = classCollection.insertOne(data);
+        res.status(200).json({
+          error: false,
+          data: result,
+          message: "class added successfull",
+        });
+      } catch (error) {
+        res.status(200).json({ error: true, message: error });
       }
     });
 
