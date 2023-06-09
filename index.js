@@ -3,6 +3,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
+// const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
+const stripe = require('stripe')('sk_test_51NH4qAG6MyH1bNR3kUQIXDCyOWS5eanGqqB8tbRYusGqq3hloKgzhpDxmWEnbRQEQHu5jfHPzROEun70rrckh1fO00aFp2l4gy')
+
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 // middleware
@@ -54,6 +57,7 @@ async function run() {
     const classCollection = db.collection("classes");
     const cartsCollection = db.collection("carts");
     const feedbackCollection = db.collection("feedback");
+    const paymentCollection = db.collection("payment");
 
     //verify admin  middleware
 
@@ -311,6 +315,49 @@ async function run() {
       const result = await feedbackCollection.find(filter).toArray();
       res.send(result);
     });
+
+
+    
+    
+    
+    // payment method start -------------------------------------------------------->>>>
+    
+      // create payment intent
+      app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+        const { price } = req.body;
+        const amount = parseInt(price * 100);
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: 'usd',
+          payment_method_types: ['card']
+        });
+  
+        res.send({
+          clientSecret: paymentIntent.client_secret
+        })
+      })
+  
+  
+      // payment related api
+      app.post('/payments', verifyJWT, async (req, res) => {
+        const payment = req.body;
+        const insertResult = await paymentCollection.insertOne(payment);
+  
+        const query = { _id: { $in: payment.classesId.map(id => new ObjectId(id)) } }
+        const deleteResult = await cartsCollection.deleteMany(query)
+        // Increment the "Enroll" field by 1 for each class
+        // const updateQuery = { _id: { $in: payment.classesId.map(id => new ObjectId(id)) } };
+        // const updateOperation = { $inc: { enroll: 1 } };
+        // const updateResult = await classCollection.updateMany(updateQuery, updateOperation);
+        // console.log(updateQuery,updateResult);
+        // res.send({ insertResult, deleteResult,updateResult });
+      })
+    
+    
+    
+    
+    // payment method end -------------------------------------------------------->>>>
+
 
     // design school api end ------------------------------
 
