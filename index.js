@@ -335,15 +335,6 @@ async function run() {
       });
     });
 
-    // payment related api
-    // app.post('/payments', verifyJWT, async (req, res) => {
-    //   const payment = req.body;
-    //   const insertResult = await paymentCollection.insertOne(payment);
-    //   const query = { _id: { $in: payment.classesId.map(id => new ObjectId(id)) } }
-    //   const deleteResult = await cartsCollection.deleteMany(query)
-    //   res.send({ insertResult, deleteResult });
-    // })
-
     app.post("/payments", verifyJWT, async (req, res) => {
       const payment = req.body;
       console.log(payment.classesId);
@@ -378,6 +369,44 @@ async function run() {
     });
 
     // payment method end -------------------------------------------------------->>>>
+
+    //  my enrolled class api ---
+
+    // app.get("/enroll", async (req, res) => {
+    //   const email = req.query.email;
+    //   emailQuery = {
+    //     email: email,
+    //   };
+    //   const paymentColl = await paymentCollection.find(emailQuery).toArray();
+    // });
+
+    app.get("/enroll", async (req, res) => {
+      try {
+        const email = req.query.email;
+        const emailQuery = { email: email };
+        const paymentCollCursor = paymentCollection.find(emailQuery);
+
+        // Convert the cursor to an array
+        const paymentColl = await paymentCollCursor.toArray();
+
+        // Extract all the unique class IDs from the payment history
+        const classIds = paymentColl.reduce(
+          (acc, payment) => [...acc, ...payment.classesId],
+          []
+        );
+
+        // Find the classes based on the extracted class IDs
+        const classes = await classCollection
+          .find({ _id: { $in: classIds.map((id) => new ObjectId(id)) } })
+          .toArray();
+
+        console.log(classes);
+        res.json(classes);
+      } catch (error) {
+        console.error("Error retrieving classes:", error);
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
 
     // design school api end ------------------------------
 
