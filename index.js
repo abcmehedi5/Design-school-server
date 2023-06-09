@@ -53,6 +53,7 @@ async function run() {
     const userCollection = db.collection("users");
     const classCollection = db.collection("classes");
     const cartsCollection = db.collection("carts");
+    const feedbackCollection = db.collection("feedback");
 
     //verify admin  middleware
 
@@ -291,6 +292,23 @@ async function run() {
         _id: new ObjectId(id),
       };
       const result = await cartsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // send instructor message why not approved courses
+
+    app.post("/feedback", async (req, res) => {
+      const data = req.body;
+      console.log(data);
+      const result = await feedbackCollection.insertOne(data);
+      res.send(result);
+    });
+    app.get("/feedback", async (req, res) => {
+      const email = req.query.email;
+      const filter = {
+        instructorEmail: email,
+      };
+      const result = await feedbackCollection.find(filter).toArray();
       res.send(result);
     });
 
