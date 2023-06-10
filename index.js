@@ -368,6 +368,18 @@ async function run() {
       });
     });
 
+    // payment history current user
+
+    app.get("/paymentHistory", verifyJWT, async (req, res) => {
+      const email = req.query.email;
+      console.log(email);
+      const filter = {
+        email: email,
+      };
+      const result = await paymentCollection.find(filter).toArray();
+      res.send(result);
+    });
+
     // payment method end -------------------------------------------------------->>>>
 
     // my enroll course find
@@ -419,16 +431,7 @@ async function run() {
       res.json(userResult);
     });
 
-
-
-
-
     // design school api end ------------------------------
-
-
-    
-
-
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
