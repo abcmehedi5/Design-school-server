@@ -248,6 +248,28 @@ async function run() {
         console.log(error);
       }
     });
+
+    // populer classes
+    app.get("/mostEnrolledApprovedClasses", async (req, res) => {
+      try {
+        const filter = {
+          status: "approved",
+        };
+    
+        const result = await classCollection
+          .find(filter)
+          .sort({ enrolled: -1 }) // Sort by the 'enrolled' field in descending order
+          .limit(6) // Retrieve only the top 6 classes
+          .toArray();
+    
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    
+    
     // update status classes
 
     app.put("/classes/:id", async (req, res) => {
