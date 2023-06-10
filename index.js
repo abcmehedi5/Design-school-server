@@ -370,16 +370,7 @@ async function run() {
 
     // payment method end -------------------------------------------------------->>>>
 
-    //  my enrolled class api ---
-
-    // app.get("/enroll", async (req, res) => {
-    //   const email = req.query.email;
-    //   emailQuery = {
-    //     email: email,
-    //   };
-    //   const paymentColl = await paymentCollection.find(emailQuery).toArray();
-    // });
-
+    // my enroll course find
     app.get("/enroll", async (req, res) => {
       try {
         const email = req.query.email;
@@ -408,7 +399,36 @@ async function run() {
       }
     });
 
+    app.get("/enroll/instructor", async (req, res) => {
+      const email = req.query.email;
+      console.log(email);
+
+      const paymentColl = await paymentCollection.find().toArray();
+
+      const instructorEnroll = paymentColl.filter((payment) =>
+        payment.instructorEmail.includes(email)
+      );
+
+      const enrollUserEmail = instructorEnroll.map((enroll) => enroll.email);
+      const query = {
+        email: { $in: enrollUserEmail.map((email) => email) },
+      };
+
+      const userResult = await userCollection.find(query).toArray();
+      // Do something with the instructorEnroll array, such as sending it as a response
+      res.json(userResult);
+    });
+
+
+
+
+
     // design school api end ------------------------------
+
+
+    
+
+
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
