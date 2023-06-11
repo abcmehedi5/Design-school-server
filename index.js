@@ -130,7 +130,7 @@ async function run() {
 
     // manage users delete
 
-    app.delete("/users/:id", async (req, res) => {
+    app.delete("/users/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = {
         _id: new ObjectId(id),
@@ -165,7 +165,7 @@ async function run() {
 
     // user roll update user, admin , instractor
 
-    app.put("/users/:id", async (req, res) => {
+    app.put("/users/:id",verifyJWT,verifyAdmin, async (req, res) => {
       const data = req.body.data;
       const id = req.params.id;
       try {
@@ -204,7 +204,7 @@ async function run() {
     });
 
     // add class api .......
-    app.post("/addClass", async (req, res) => {
+    app.post("/addClass", verifyJWT , verifyInstractor, async (req, res) => {
       const data = req.body;
       try {
         const result = classCollection.insertOne(data);
@@ -234,7 +234,7 @@ async function run() {
     });
 
     // my classes delete
-    app.delete("/classes/:id", async (req, res) => {
+    app.delete("/classes/:id",verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = {
         _id: new ObjectId(id),
@@ -244,7 +244,7 @@ async function run() {
     });
 
     // class id find with update
-    app.get("/allupdateclasses/:id", async (req, res) => {
+    app.get("/allupdateclasses/:id",verifyJWT,verifyInstractor, async (req, res) => {
       const id = req.params.id;
       console.log(id);
       const filter = {
@@ -301,7 +301,7 @@ async function run() {
     });
 
     // manage classes delete/.....
-    app.delete("/classes/:id", async (req, res) => {
+    app.delete("/classes/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = {
         _id: new ObjectId(id),
@@ -344,7 +344,7 @@ async function run() {
 
     // update status classes
 
-    app.put("/classes/:id", async (req, res) => {
+    app.put("/classes/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const data = req.body.data;
       const id = req.params.id;
       try {
@@ -375,7 +375,7 @@ async function run() {
 
     // carts api
 
-    app.get("/carts", async (req, res) => {
+    app.get("/carts",verifyJWT, async (req, res) => {
       const email = req.query.email;
       const filter = {
         email: email,
@@ -384,14 +384,14 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/carts", async (req, res) => {
+    app.post("/carts", verifyJWT, async (req, res) => {
       const data = req.body;
       const result = await cartsCollection.insertOne(data);
       res.status(200).json({ data: result, message: "selected successfull" });
     });
     // delete carts
 
-    app.delete("/carts/:id", async (req, res) => {
+    app.delete("/carts/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = {
         _id: new ObjectId(id),
@@ -402,12 +402,12 @@ async function run() {
 
     // send instructor message why not approved courses
 
-    app.post("/feedback", async (req, res) => {
+    app.post("/feedback", verifyJWT,verifyAdmin, async (req, res) => {
       const data = req.body;
       const result = await feedbackCollection.insertOne(data);
       res.send(result);
     });
-    app.get("/feedback", async (req, res) => {
+    app.get("/feedback", verifyJWT,verifyInstractor, async (req, res) => {
       const email = req.query.email;
       const filter = {
         instructorEmail: email,
