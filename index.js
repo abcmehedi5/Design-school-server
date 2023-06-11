@@ -99,7 +99,6 @@ async function run() {
     app.post("/users", async (req, res) => {
       const userData = req.body;
       const query = { email: userData.email };
-      console.log(userData);
       try {
         const existingUser = await userCollection.findOne(query);
         if (existingUser) {
@@ -121,7 +120,6 @@ async function run() {
 
     app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const userData = req.body;
-      console.log(userData);
       try {
         const result = await userCollection.find().toArray();
         res.send(result);
@@ -140,9 +138,6 @@ async function run() {
       const result = await userCollection.deleteOne(query);
       res.send(result);
     });
-
-
-
 
     // check admin
     app.get("/users/admin/:email", verifyJWT, async (req, res) => {
@@ -173,7 +168,6 @@ async function run() {
     app.put("/users/:id", async (req, res) => {
       const data = req.body.data;
       const id = req.params.id;
-      console.log(id, data);
       try {
         const filter = {
           _id: new ObjectId(id),
@@ -233,10 +227,66 @@ async function run() {
 
       try {
         const result = await classCollection.find(filter).toArray();
-        console.log(result);
         res.send(result);
       } catch (error) {
         console.log(error);
+      }
+    });
+
+    // my classes delete
+    app.delete("/classes/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {
+        _id: new ObjectId(id),
+      };
+      const result = await classCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // class id find with update
+    app.get("/allupdateclasses/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const filter = {
+        _id: new ObjectId(id),
+      };
+      try {
+        const result = await classCollection.findOne(filter);
+        res.send(result);
+      } catch (error) {
+        console.log(error);
+      }
+    });
+
+    // my class update
+    app.put("/classUpdate/:id", async (req, res) => {
+      const data = req.body;
+      const id = req.params.id;
+      try {
+        const filter = {
+          _id: new ObjectId(id),
+        };
+        const options = { upsert: true };
+
+        const updateDoc = {
+          $set: {
+            name: data.name,
+            availableSeats: parseInt(data.availableSeats),
+            price: parseFloat(data.price),
+          },
+        };
+
+        const result = await classCollection.updateOne(
+          filter,
+          updateDoc,
+          options
+        );
+
+        res
+          .status(200)
+          .json({ data: result, message: "data update successfull" });
+      } catch (error) {
+        res.status(500).json({ error: true, message: error.message });
       }
     });
 
@@ -250,16 +300,15 @@ async function run() {
       }
     });
 
-      // manage classes delete/.....
-      app.delete("/classes/:id", async (req, res) => {
-        const id = req.params.id;
-        const query = {
-          _id: new ObjectId(id),
-        };
-        const result = await classCollection.deleteOne(query);
-        res.send(result);
-      });
-
+    // manage classes delete/.....
+    app.delete("/classes/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {
+        _id: new ObjectId(id),
+      };
+      const result = await classCollection.deleteOne(query);
+      res.send(result);
+    });
 
     // only approved classes
     app.get("/approvedClasses", async (req, res) => {
@@ -280,27 +329,24 @@ async function run() {
         const filter = {
           status: "approved",
         };
-    
+
         const result = await classCollection
           .find(filter)
           .sort({ enrolled: -1 }) // Sort by the 'enrolled' field in descending order
           .limit(6) // Retrieve only the top 6 classes
           .toArray();
-    
+
         res.send(result);
       } catch (error) {
         console.log(error);
       }
     });
 
-    
-    
     // update status classes
 
     app.put("/classes/:id", async (req, res) => {
       const data = req.body.data;
       const id = req.params.id;
-      console.log(id, data);
       try {
         const filter = {
           _id: new ObjectId(id),
@@ -358,7 +404,6 @@ async function run() {
 
     app.post("/feedback", async (req, res) => {
       const data = req.body;
-      console.log(data);
       const result = await feedbackCollection.insertOne(data);
       res.send(result);
     });
@@ -390,7 +435,6 @@ async function run() {
 
     app.post("/payments", verifyJWT, async (req, res) => {
       const payment = req.body;
-      console.log(payment.classesId);
       const insertResult = await paymentCollection.insertOne(payment);
       const query = {
         _id: { $in: payment.cartId.map((id) => new ObjectId(id)) },
@@ -425,7 +469,6 @@ async function run() {
 
     app.get("/paymentHistory", verifyJWT, async (req, res) => {
       const email = req.query.email;
-      console.log(email);
       const filter = {
         email: email,
       };
@@ -456,7 +499,6 @@ async function run() {
           .find({ _id: { $in: classIds.map((id) => new ObjectId(id)) } })
           .toArray();
 
-        console.log(classes);
         res.json(classes);
       } catch (error) {
         console.error("Error retrieving classes:", error);
@@ -466,7 +508,6 @@ async function run() {
 
     app.get("/enroll/instructor", async (req, res) => {
       const email = req.query.email;
-      console.log(email);
 
       const paymentColl = await paymentCollection.find().toArray();
 
@@ -482,6 +523,26 @@ async function run() {
       const userResult = await userCollection.find(query).toArray();
       // Do something with the instructorEnroll array, such as sending it as a response
       res.json(userResult);
+    });
+
+    // stats
+
+    app.get("/admin-stats", verifyJWT, verifyAdmin, async (req, res) => {
+      const users = await userCollection.estimatedDocumentCount();
+      const payment = await paymentCollection.estimatedDocumentCount();
+      const classes = await classCollection.estimatedDocumentCount();
+      const allUser = await userCollection
+        .find()
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .toArray();
+      const paymentsAmount = await paymentCollection.find().toArray();
+      const revenue = paymentsAmount.reduce(
+        (sum, payment) => sum + payment.price,
+        0
+      );
+
+      res.send({ revenue, users, payment, classes, allUser });
     });
 
     // design school api end ------------------------------
