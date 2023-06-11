@@ -130,6 +130,20 @@ async function run() {
       }
     });
 
+    // manage users delete
+
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {
+        _id: new ObjectId(id),
+      };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
+
+
+
+
     // check admin
     app.get("/users/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
@@ -235,6 +249,17 @@ async function run() {
         console.log(error);
       }
     });
+
+      // manage classes delete/.....
+      app.delete("/classes/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = {
+          _id: new ObjectId(id),
+        };
+        const result = await classCollection.deleteOne(query);
+        res.send(result);
+      });
+
 
     // only approved classes
     app.get("/approvedClasses", async (req, res) => {
